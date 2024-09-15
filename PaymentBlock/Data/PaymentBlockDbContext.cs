@@ -10,5 +10,7 @@ namespace PaymentBlockAPI.Data
         }
 
         public DbSet<Client> Clients { get; set; }
+
+        public DbSet<Block> Blocks { get; set; }
     }
 }

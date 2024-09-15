@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PaymentBlockAPI.Data;
 
@@ -11,9 +12,10 @@ using PaymentBlockAPI.Data;
 namespace PaymentBlockAPI.Migrations
 {
     [DbContext(typeof(PaymentBlockDbContext))]
-    partial class PaymentBlockDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240914194845_Add Block Migration")]
+    partial class AddBlockMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,9 +30,8 @@ namespace PaymentBlockAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("BlockDateTime")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("BlockDateTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("ClientId")
                         .HasColumnType("uniqueidentifier");
@@ -39,11 +40,12 @@ namespace PaymentBlockAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UnlockDateTime")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("UnlockDateTime")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("BlockId");
+
+                    b.HasIndex("ClientId");
 
                     b.ToTable("Blocks");
                 });
@@ -76,6 +78,17 @@ namespace PaymentBlockAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Clients");
+                });
+
+            modelBuilder.Entity("PaymentBlockAPI.Models.Block", b =>
+                {
+                    b.HasOne("PaymentBlockAPI.Models.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Client");
                 });
 #pragma warning restore 612, 618
         }

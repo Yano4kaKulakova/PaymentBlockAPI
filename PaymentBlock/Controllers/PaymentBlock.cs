@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using PaymentBlockAPI.Data;
 using PaymentBlockAPI.Models;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace PaymentBlockAPI.Controllers
 {
+
     [ApiController]
     [Route("api/[controller]")]
     public class PaymentBlockController : Controller
@@ -15,7 +17,10 @@ namespace PaymentBlockAPI.Controllers
         {
             this.dbContext = dbContext;
         }
-
+        /// <summary>
+        /// Получение списка клиентов
+        /// </summary>
+        
         [HttpGet]
         public async Task<IActionResult> GetClients()
         {
@@ -88,6 +93,40 @@ namespace PaymentBlockAPI.Controllers
             }
 
             return NotFound();
+        }
+
+        
+
+        [HttpPost]
+        [Route("{id:guid}")]
+        public async Task<IActionResult> AddBlock([FromRoute] Guid id, AddBlockRequest addBlockRequest)
+        {
+            var client = await dbContext.Clients.FindAsync(id);
+            if (client != null)
+            {
+              
+
+                var block = new Block()
+                {
+                    BlockId = Guid.NewGuid(),
+                    BlockDateTime = DateTime.Now.ToString(),
+                    ClientId = id,
+                    Reason = addBlockRequest.Reason,
+
+                };
+
+
+                await dbContext.Blocks.AddAsync(block);
+                await dbContext.SaveChangesAsync();
+
+                return Ok(block);
+            }
+
+            return NotFound("Клиент не найден");
+
+            
+
+            
         }
     }
 }
