@@ -16,8 +16,7 @@ namespace PaymentBlockAPI.Controllers
         public BlockPaymentController(PaymentBlockDbContext dbContext)
         {
             this.dbContext = dbContext;
-        }
-        
+        }       
 
         /// <summary>
         /// Заблокировать платежи клиента
@@ -50,7 +49,6 @@ namespace PaymentBlockAPI.Controllers
             }
 
             return NotFound("Клиент не найден");
-
         }
 
         /// <summary>
@@ -181,7 +179,6 @@ namespace PaymentBlockAPI.Controllers
                 client.Email = updateClientRequest.Email;
                 client.Phone = updateClientRequest.Phone;
                 client.Address = updateClientRequest.Address;
-                client.Status = updateClientRequest.Status;
 
                 await dbContext.SaveChangesAsync();
 
