@@ -4,5 +4,7 @@
     {
         public string Reason { get; set; }
 
+        Client Client { get; set; }
+
     }
 }

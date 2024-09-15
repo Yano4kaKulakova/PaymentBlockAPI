@@ -8,6 +8,8 @@
 
         public Guid ClientId { get; set; }
 
+        Client Client { get; set; }
+
         public string Reason { get; set; }
 
         public string UnlockDateTime { get; set; } = " ";

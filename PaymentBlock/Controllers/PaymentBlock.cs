@@ -18,7 +18,7 @@ namespace PaymentBlockAPI.Controllers
             this.dbContext = dbContext;
         }
         /// <summary>
-        /// Получение списка клиентов
+        /// Получить список клиентов
         /// </summary>
         
         [HttpGet]
@@ -27,18 +27,67 @@ namespace PaymentBlockAPI.Controllers
             return Ok(await dbContext.Clients.ToListAsync());
         }
 
+        /// <summary>
+        /// Заблокировать платежи клиента
+        /// </summary>
+
+        [HttpPost]
+        [Route("{id:guid}")]
+        public async Task<IActionResult> AddBlock([FromRoute] Guid id, AddBlockRequest addBlockRequest)
+        {
+            var client = await dbContext.Clients.FindAsync(id);
+            if (client != null)
+            {
+
+
+                var block = new Block()
+                {
+                    BlockId = Guid.NewGuid(),
+                    BlockDateTime = DateTime.Now.ToString(),
+                    ClientId = id,
+                    Reason = addBlockRequest.Reason,
+
+                };
+
+                client.Status = "Заблокирован";
+
+                await dbContext.Blocks.AddAsync(block);
+                await dbContext.SaveChangesAsync();
+
+                return Ok(block);
+            }
+
+            return NotFound("Клиент не найден");
+
+        }
+
+        /// <summary>
+        /// Разблокировать платежи клиента
+        /// </summary>
+
         [HttpGet]
         [Route("{id:guid}")]
         public async Task<IActionResult> GetClient([FromRoute] Guid id)
         {
             var client = await dbContext.Clients.FindAsync(id);
-            if (client == null)
+            if (client != null)
             {
-                return NotFound();
+                var block = await dbContext.Blocks.Where(b => b.ClientId == id && b.UnlockDateTime == " ").FirstOrDefaultAsync();
+                if (block != null)
+                {
+                    block.UnlockDateTime = DateTime.Now.ToString();
+                    client.Status = "Активен";
+                    await dbContext.SaveChangesAsync();
+                    return Ok("Клиент разблокирован");
+                }
+
+                return NotFound("Клиент не заблокирован");
             }
 
-            return Ok(client);
+            return NotFound("Клиент не найден");
         }
+
+        
 
         [HttpPost]
         public async Task<IActionResult> AddClient(AddClientRequest addClientRequest)
@@ -70,6 +119,7 @@ namespace PaymentBlockAPI.Controllers
                 client.Email = updateClientRequest.Email;
                 client.Phone = updateClientRequest.Phone;
                 client.Address = updateClientRequest.Address;
+                client.Status = updateClientRequest.Status;
 
                 await dbContext.SaveChangesAsync();
 
@@ -96,37 +146,6 @@ namespace PaymentBlockAPI.Controllers
         }
 
         
-
-        [HttpPost]
-        [Route("{id:guid}")]
-        public async Task<IActionResult> AddBlock([FromRoute] Guid id, AddBlockRequest addBlockRequest)
-        {
-            var client = await dbContext.Clients.FindAsync(id);
-            if (client != null)
-            {
-              
-
-                var block = new Block()
-                {
-                    BlockId = Guid.NewGuid(),
-                    BlockDateTime = DateTime.Now.ToString(),
-                    ClientId = id,
-                    Reason = addBlockRequest.Reason,
-
-                };
-
-
-                await dbContext.Blocks.AddAsync(block);
-                await dbContext.SaveChangesAsync();
-
-                return Ok(block);
-            }
-
-            return NotFound("Клиент не найден");
-
-            
-
-            
-        }
+        
     }
 }
