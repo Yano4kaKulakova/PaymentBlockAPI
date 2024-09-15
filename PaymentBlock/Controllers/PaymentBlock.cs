@@ -9,23 +9,15 @@ namespace PaymentBlockAPI.Controllers
 
     [ApiController]
     [Route("api/[controller]")]
-    public class PaymentBlockController : Controller
+    public class BlockPaymentController : Controller
     {
         private readonly PaymentBlockDbContext dbContext;
 
-        public PaymentBlockController(PaymentBlockDbContext dbContext)
+        public BlockPaymentController(PaymentBlockDbContext dbContext)
         {
             this.dbContext = dbContext;
         }
-        /// <summary>
-        /// Получить список клиентов
-        /// </summary>
         
-        [HttpGet]
-        public async Task<IActionResult> GetClients()
-        {
-            return Ok(await dbContext.Clients.ToListAsync());
-        }
 
         /// <summary>
         /// Заблокировать платежи клиента
@@ -65,7 +57,7 @@ namespace PaymentBlockAPI.Controllers
         /// Разблокировать платежи клиента
         /// </summary>
 
-        [HttpGet]
+        [HttpPut]
         [Route("{id:guid}")]
         public async Task<IActionResult> GetClient([FromRoute] Guid id)
         {
@@ -87,7 +79,73 @@ namespace PaymentBlockAPI.Controllers
             return NotFound("Клиент не найден");
         }
 
-        
+        /// <summary>
+        /// Проверить статус и причину блокировки клиента
+        /// </summary>
+
+        [HttpGet]
+        [Route("{id:guid}")]
+        public async Task<IActionResult> CheckClient([FromRoute] Guid id)
+        {
+            var client = await dbContext.Clients.FindAsync(id);
+            if (client != null)
+            {
+                
+                if (client.Status == "Заблокирован")
+                {
+                    var block = await dbContext.Blocks.Where(b => b.ClientId == id && b.UnlockDateTime == " ").FirstOrDefaultAsync();
+                    return Ok(client.Status + "\n" + block.Reason);
+                }
+
+                return Ok(client.Status);
+            }
+
+            return NotFound("Клиент не найден");
+        }
+
+    }
+
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ClientsController : Controller
+    {
+        private readonly PaymentBlockDbContext dbContext;
+
+        public ClientsController(PaymentBlockDbContext dbContext)
+        {
+            this.dbContext = dbContext;
+        }
+
+        /// <summary>
+        /// Получить список клиентов
+        /// </summary>
+
+        [HttpGet]
+        public async Task<IActionResult> GetClients()
+        {
+            return Ok(await dbContext.Clients.ToListAsync());
+        }
+
+        /// <summary>
+        /// Получить данные конкретного клиента
+        /// </summary>
+
+        [HttpGet]
+        [Route("{id:guid}")]
+        public async Task<IActionResult> GetClient([FromRoute] Guid id)
+        {
+            var client = await dbContext.Clients.FindAsync(id);
+            if (client != null)
+            {
+                return Ok(client);
+            }
+
+            return NotFound("Клиент не найден");
+        }
+
+        /// <summary>
+        /// Добавить нового клиента
+        /// </summary>
 
         [HttpPost]
         public async Task<IActionResult> AddClient(AddClientRequest addClientRequest)
@@ -107,6 +165,10 @@ namespace PaymentBlockAPI.Controllers
 
             return Ok(client);
         }
+
+        /// <summary>
+        /// Изменить данные клиента
+        /// </summary>
 
         [HttpPut]
         [Route("{id:guid}")]
@@ -129,6 +191,10 @@ namespace PaymentBlockAPI.Controllers
             return NotFound();
         }
 
+        /// <summary>
+        /// Удалить клиента
+        /// </summary>
+
         [HttpDelete]
         [Route("{id:guid}")]
         public async Task<IActionResult> DeleteClient([FromRoute] Guid id)
@@ -144,8 +210,27 @@ namespace PaymentBlockAPI.Controllers
 
             return NotFound();
         }
+    }
 
-        
-        
+    [ApiController]
+    [Route("api/[controller]")]
+    public class BlocksController : Controller
+    {
+        private readonly PaymentBlockDbContext dbContext;
+
+        public BlocksController(PaymentBlockDbContext dbContext)
+        {
+            this.dbContext = dbContext;
+        }
+
+        /// <summary>
+        /// Получить список блокировок клиентов
+        /// </summary>
+
+        [HttpGet]
+        public async Task<IActionResult> GetClients()
+        {
+            return Ok(await dbContext.Blocks.ToListAsync());
+        }
     }
 }
